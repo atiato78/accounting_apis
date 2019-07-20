@@ -32,7 +32,7 @@ import org.joda.time.DateTime;
 //bank_code varchar(20)
 //);
 
-
+/* God bless lebanon*/
 
 public class Payment {
 	private int id;
