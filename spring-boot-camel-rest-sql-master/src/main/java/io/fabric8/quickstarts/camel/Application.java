@@ -266,7 +266,7 @@ public class Application extends SpringBootServletInitializer {
                }
             })
           //  .delay(10000)
-            .log("${body}")
+       
             .log("Inserted out of proecedure order ${header.span_out}");
 
         }
