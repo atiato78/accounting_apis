@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.fabric8.quickstarts</groupId>
-    <artifactId>spring-boot-camel-rest-sql</artifactId>
+    <artifactId>spring</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <name>Fabric8 :: Quickstarts :: Spring-Boot :: Camel REST / SQL</name>
@@ -113,13 +113,13 @@
     <artifactId>camel-csv</artifactId>
 </dependency>
 
- <dependency>
+ <!-- <dependency>
 		<groupId>com.oracle</groupId>
 		<artifactId>ojdbc</artifactId>
 		<version>8</version>
 		<scope>system</scope>
 		<systemPath>/Users/omar/Downloads/OJDBC8-Full/ojdbc8.jar</systemPath>
-	</dependency>
+	</dependency> -->
 
 <dependency>
     <groupId>org.apache.camel</groupId>

@@ -1,10 +1,10 @@
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
-  name: {{ template "spring-boot-camel-rest-sql-master.fullname" . }}
+  name: {{ template "spring.fullname" . }}
   labels:
-    app: {{ template "spring-boot-camel-rest-sql-master.name" . }}
-    chart: {{ template "spring-boot-camel-rest-sql-master.chart" . }}
+    app: {{ template "spring.name" . }}
+    chart: {{ template "spring.chart" . }}
     draft: {{ .Values.draft | default "draft-app" }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
@@ -12,12 +12,12 @@ spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ template "spring-boot-camel-rest-sql-master.name" . }}
+      app: {{ template "spring.name" . }}
       release: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: {{ template "spring-boot-camel-rest-sql-master.name" . }}
+        app: {{ template "spring.name" . }}
         draft: {{ .Values.draft | default "draft-app" }}
         release: {{ .Release.Name }}
       annotations:
@@ -48,7 +48,7 @@ spec:
             - name: {{ $ref }}_{{ $key }}
               valueFrom:
                 secretKeyRef:
-                  name: {{ template "spring-boot-camel-rest-sql-master.fullname" $root }}-{{ $ref | lower }}
+                  name: {{ template "spring.fullname" $root }}-{{ $ref | lower }}
                   key: {{ $key }}
             {{- end }}
             {{- end }}

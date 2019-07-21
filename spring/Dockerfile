@@ -1,6 +1,8 @@
-FROM mcr.microsoft.com/java/maven:8u202-zulu-debian9
+FROM mcr.microsoft.com/java/jre:8u202-zulu-debian9 AS base
 EXPOSE 8080
+WORKDIR /app
 
+FROM mcr.microsoft.com/java/maven:8u202-zulu-debian9 AS build
 WORKDIR /usr/src/app
 COPY pom.xml ./
 RUN /usr/local/bin/mvn-entrypoint.sh \
@@ -8,4 +10,6 @@ RUN /usr/local/bin/mvn-entrypoint.sh \
 COPY . .
 RUN mvn package -Dmaven.test.skip=true -Dcheckstyle.skip=true -Dmaven.javadoc.skip=true
 
-ENTRYPOINT ["java","-jar","target/spring-boot-camel-rest-sql-1.0-SNAPSHOT.jar"]
+FROM base AS final
+COPY --from=build /usr/src/app/target/*.jar ./
+ENTRYPOINT ["java","-jar","spring-1.0-SNAPSHOT.jar"]

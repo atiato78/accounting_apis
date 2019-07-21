@@ -4,24 +4,24 @@ build:
   context: .
   dockerfile: Dockerfile
 install:
-  chart: charts/spring-boot-camel-rest-sql-master
+  chart: charts/spring
   values:
   - values.dev.yaml?
   - secrets.dev.yaml?
   set:
     replicaCount: 1
     image:
-      repository: spring-boot-camel-rest-sql-master
+      repository: spring
       tag: $(tag)
       pullPolicy: Never
     ingress:
       annotations:
         kubernetes.io/ingress.class: traefik-azds
       hosts:
-      # This expands to form the service's public URL: [space.s.][rootSpace.]spring-boot-camel-rest-sql-master.<random suffix>.<region>.azds.io
-      # Customize the public URL by changing the 'spring-boot-camel-rest-sql-master' text between the $(rootSpacePrefix) and $(hostSuffix) tokens
+      # This expands to form the service's public URL: [space.s.][rootSpace.]spring.<random suffix>.<region>.azds.io
+      # Customize the public URL by changing the 'spring' text between the $(rootSpacePrefix) and $(hostSuffix) tokens
       # For more information see https://aka.ms/devspaces/routing
-      - $(spacePrefix)$(rootSpacePrefix)spring-boot-camel-rest-sql-master$(hostSuffix)
+      - $(spacePrefix)$(rootSpacePrefix)spring$(hostSuffix)
 configurations:
   develop:
     build:

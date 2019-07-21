@@ -18,13 +18,19 @@ endpoints:
   health:
     enabled: true
 
-spring:
+#spring:
+  # Spring JDBC configuration
+ # datasource:
+  #  url:      jdbc:mysql://localhost:3306/tra_payments?serverTimezone=EST5EDT
+   # username: root
+   # password: Oa03216287@
+    
+    spring:
   # Spring JDBC configuration
   datasource:
-    url:      jdbc:mysql://localhost:3306/tra_payments?serverTimezone=EST5EDT
-    username: root
-    password: Oa03216287@
-    
+    url:      jdbc:mysql://${${mysql.service.name}.service.host}:${${mysql.service.name}.service.port}/${mysql.service.database}
+    username: user7SS
+    password: qLipb2eRpLsKdJLT
 #spring:
   # Spring JDBC configuration
  # datasource:

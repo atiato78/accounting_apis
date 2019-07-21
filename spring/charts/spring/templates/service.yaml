@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "spring-boot-camel-rest-sql-master.fullname" . }}
+  name: {{ template "spring.fullname" . }}
   labels:
-    app: {{ template "spring-boot-camel-rest-sql-master.name" . }}
-    chart: {{ template "spring-boot-camel-rest-sql-master.chart" . }}
+    app: {{ template "spring.name" . }}
+    chart: {{ template "spring.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
@@ -15,5 +15,5 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app: {{ template "spring-boot-camel-rest-sql-master.name" . }}
+    app: {{ template "spring.name" . }}
     release: {{ .Release.Name }}

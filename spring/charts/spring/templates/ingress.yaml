@@ -1,5 +1,5 @@
 {{- if .Values.ingress.enabled -}}
-{{- $fullName := include "spring-boot-camel-rest-sql-master.fullname" . -}}
+{{- $fullName := include "spring.fullname" . -}}
 {{- $servicePort := .Values.service.port -}}
 {{- $ingressPath := .Values.ingress.path -}}
 apiVersion: extensions/v1beta1
@@ -7,8 +7,8 @@ kind: Ingress
 metadata:
   name: {{ $fullName }}
   labels:
-    app: {{ template "spring-boot-camel-rest-sql-master.name" . }}
-    chart: {{ template "spring-boot-camel-rest-sql-master.chart" . }}
+    app: {{ template "spring.name" . }}
+    chart: {{ template "spring.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 {{- with .Values.ingress.annotations }}
