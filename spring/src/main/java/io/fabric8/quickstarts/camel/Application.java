@@ -265,7 +265,7 @@ public class Application extends SpringBootServletInitializer {
                     
                }
             })
-          //  .delay(10000)
+            .delay(10000)
             .log("Inserted new sid ${body}")
             .log("Inserted new sid ${body}")
 
