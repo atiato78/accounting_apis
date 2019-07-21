@@ -265,14 +265,8 @@ public class Application extends SpringBootServletInitializer {
                     
                }
             })
-            .delay(10000)
-            .log("Inserted new sid ${body}")
-         //   .log("Inserted new sid ${body}")
-         //   .log("Inserted new sid ${body}")
-         //  .delay(500)
-         .log("inserted time ${header._time}")
-
-          .delay(500)
+         //   .delay(10000)
+   
             .log("Inserted out of proecedure order ${header.span_out}");
 
         }
