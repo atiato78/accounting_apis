@@ -38,7 +38,7 @@ public class BillCycle {
     private int id;
     private Date predict_start_date;
     private int operator_id;
-    private int test;
+  //  private int test;
     
     public int getId() {
         return id;
