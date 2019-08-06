@@ -113,13 +113,21 @@
     <artifactId>camel-csv</artifactId>
 </dependency>
 
- <!-- <dependency>
+ <dependency>
 		<groupId>com.oracle</groupId>
 		<artifactId>ojdbc</artifactId>
 		<version>8</version>
 		<scope>system</scope>
 		<systemPath>/Users/omar/Downloads/OJDBC8-Full/ojdbc8.jar</systemPath>
-	</dependency> -->
+	</dependency> 
+	
+	<!-- https://mvnrepository.com/artifact/commons-dbcp/commons-dbcp -->
+<dependency>
+    <groupId>commons-dbcp</groupId>
+    <artifactId>commons-dbcp</artifactId>
+    <version>1.2.2</version>
+</dependency>
+	
 
 <dependency>
     <groupId>org.apache.camel</groupId>

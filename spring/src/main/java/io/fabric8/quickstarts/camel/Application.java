@@ -18,6 +18,8 @@ package io.fabric8.quickstarts.camel;
 import java.util.ArrayList;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
@@ -32,10 +34,14 @@ import org.apache.camel.util.jsse.SSLContextParameters;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceBuilder;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ImportResource;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -146,6 +152,28 @@ public class Application extends SpringBootServletInitializer {
         }
     }	
 
+    
+    
+    @Bean(name = "OracledataSource")
+    @ConfigurationProperties(prefix="test.datasource")
+    public DataSource dataSource() {
+        return DataSourceBuilder.create().build();
+    }
+    
+    @Bean(name = "mySQLdataSource")
+    @Primary
+    @ConfigurationProperties(prefix="spring.datasource")
+    public DataSource testdataSource() {
+        return DataSourceBuilder.create().build();
+    }
+    
+    @Bean(name = "dataSource")
+    @ConfigurationProperties(prefix="spring.datasource")
+    public DataSource trydataSource() {
+        return DataSourceBuilder.create().build();
+    }
+   
+    
     @Component
     class Backend extends RouteBuilder {
 
@@ -159,115 +187,138 @@ public class Application extends SpringBootServletInitializer {
         	//df.setUseList(true);
 
         	
-            // A first route generates some orders and queue them in DB
-            from("sql:select * from bill_cycle where is_predicted = 'no'?" +
-                    "consumer.onConsume=update bill_cycle set is_predicted = 'yes' where id = :#tid&" +
-                    "consumer.delay={{quickstart.processOrderPeriod:5s}}&" +
-                    "dataSource=dataSource&"+"outputClass=io.fabric8.quickstarts.camel.BillCycle")
-                .routeId("processing-prediction-for-billcycle").log("${body.id}")
-                //.setHeader("CamelSqlRetrieveGeneratedKeys",simple("true", Boolean.class))
-                .setHeader("tid",simple("${body.id}"))
-                .setHeader("QueryResult",simple("${body}"))
-          //      .bean("orderService", "generateOrder")
-                .setHeader("Content-Type", constant("application/x-www-form-urlencoded"))
-                .setHeader("Accept", constant("application/x-www-form-urlencoded"))
-                .setHeader(Exchange.HTTP_METHOD, constant("POST")) 
-            
-
-                .to("log:DEBUG?showBody=true&showHeaders=true")
-                .setBody(constant("username=admin&password=Oa03216287@"))
-                .log("${body}")
-                .to("http://localhost:8089/services/auth/login")
-                .split().xpath("//response/sessionKey/text()")
-                .log("Inserted new order ${body}")
-                .setHeader("Content-Type", constant("application/x-www-form-urlencoded"))
-                .setHeader("Accept", constant("application/x-www-form-urlencoded"))
-                .setHeader(Exchange.HTTP_METHOD, constant("POST")) 
-                .setHeader("Authorization",simple("Splunk ${body}"))
-                .log("${header.Authorization}")
-                .setBody(constant("search=search%20index%3Dinvoices%20%7C%20eval%20_time%3Dstrptime(from_date%2C%20%22%25Y-%25m-%25d%22)%20%7C%20timechart%20span%3D1mon%20values(invoice_amount)%20as%20invoice_amount%20%7C%20predict%20%22invoice_amount%22%20as%20prediction%20algorithm%3DLLP5%20holdback%3D0%20future_timespan%3D5%20upper0%3Dupper0%20lower0%3Dlower0%20%7C%20%60forecastviz(5%2C%200%2C%20%22invoice_amount%22%2C%200)%60"))
-            .log("${body}")
-            .to("http://localhost:8089/servicesNS/admin/Splunk_ML_Toolkit/search/jobs")
-            .split().xpath("//response/sid/text()")
-            .log("Inserted new sid ${body}")
-            .setHeader("sid",simple("${body}"))
-            .setHeader("Content-Type", constant("application/x-www-form-urlencoded"))
-            .setHeader("Accept", constant("application/x-www-form-urlencoded"))
-            .setHeader(Exchange.HTTP_METHOD, constant("GET")) 
-            .delay(10000)
-         //   .setBody(constant("output_mode=json"))
-            .toD("http://localhost:8089/servicesNS/admin/Splunk_ML_Toolkit/search/jobs/${header.sid}/results/?output_mode=json")
-          //  .log("Inserted new predicted search result ${body}") 
-            .unmarshal(df)
-            
-            .process(new Processor() {
-                public void process(Exchange exchange) throws Exception {
-                    Root output = (Root)exchange.getIn().getBody(Root.class);
-                    BillCycle predictdate = (BillCycle)exchange.getIn().getHeader("QueryResult");
-                          
-//                    writeScript(script,host);
-                    for (int i=0;i<output.getResults().size();i++) {
-                   
-                    	if(output.getResults().get(i).get_time().toString().equals(predictdate.getPredict_start_date().toString()))
-                    	{
-                    		log.info("result"+output.getResults().get(i).get_time().toString()+"prediction"+output.getResults().get(i).getPrediction()+"span"+output.getResults().get(i).get_spandays());
-                            exchange.getIn().setHeader("_time",predictdate.getPredict_start_date());
-                            exchange.getIn().setHeader("prediction",Double.parseDouble(output.getResults().get(i).getPrediction()));
-                            if(output.getResults().get(i).get_spandays()!=null)
-                            {
-                                exchange.getIn().setHeader("future_span", Integer.parseInt(output.getResults().get(i).get_spandays()));
-
-	
-                            }else exchange.getIn().setHeader("future_span", Integer.parseInt("0"));
-
-
-                    		break;	
-                    	}
-                    	
-                    	
-                    
-                    }
-//}
-                    exchange.getIn().setHeader("op_code",predictdate.getOperator_id());
-
-                    
-               }
-            })
-            .to("sql:insert into predict_revenue (id,operator_id,from_date,to_date,future_span,predicted_amount,username) values " +
-                    "(1,:#${header.op_code} , :#${header._time},sysdate, :#${header.future_span}, :#${header.prediction},'atiato')?" +
-                    "dataSource=dataSource")
-            
-            .log("inserted time ${header._time}")
-
-            ;
-
+//            from("sql:select * from bill_cycle where is_predicted = 'no'?" +
+//                    "consumer.onConsume=update bill_cycle set is_predicted = 'yes' where id = :#tid&" +
+//                    "consumer.delay={{quickstart.processOrderPeriod:5s}}&" +
+//                    "dataSource=dataSource&"+"outputClass=io.fabric8.quickstarts.camel.BillCycle")
+//                .routeId("processing-prediction-for-billcycle").log("${body.id}")
+//                .setHeader("tid",simple("${body.id}"))
+//                .setHeader("QueryResult",simple("${body}"))
+//                .setHeader("Content-Type", constant("application/x-www-form-urlencoded"))
+//                .setHeader("Accept", constant("application/x-www-form-urlencoded"))
+//                .setHeader(Exchange.HTTP_METHOD, constant("POST")) 
+//            
+//
+//                .to("log:DEBUG?showBody=true&showHeaders=true")
+//                .setBody(constant("username=admin&password=Oa03216287@"))
+//                .log("${body}")
+//                .to("http://localhost:8089/services/auth/login")
+//                .split().xpath("//response/sessionKey/text()")
+//                .log("Inserted new order ${body}")
+//                .setHeader("Content-Type", constant("application/x-www-form-urlencoded"))
+//                .setHeader("Accept", constant("application/x-www-form-urlencoded"))
+//                .setHeader(Exchange.HTTP_METHOD, constant("POST")) 
+//                .setHeader("Authorization",simple("Splunk ${body}"))
+//                .log("${header.Authorization}")
+//                .setBody(constant("search=search%20index%3Dinvoices%20%7C%20eval%20_time%3Dstrptime(from_date%2C%20%22%25Y-%25m-%25d%22)%20%7C%20timechart%20span%3D1mon%20values(invoice_amount)%20as%20invoice_amount%20%7C%20predict%20%22invoice_amount%22%20as%20prediction%20algorithm%3DLLP5%20holdback%3D0%20future_timespan%3D5%20upper0%3Dupper0%20lower0%3Dlower0%20%7C%20%60forecastviz(5%2C%200%2C%20%22invoice_amount%22%2C%200)%60"))
+//            .log("${body}")
+//            .to("http://localhost:8089/servicesNS/admin/Splunk_ML_Toolkit/search/jobs")
+//            .split().xpath("//response/sid/text()")
+//            .log("Inserted new sid ${body}")
+//            .setHeader("sid",simple("${body}"))
+//            .setHeader("Content-Type", constant("application/x-www-form-urlencoded"))
+//            .setHeader("Accept", constant("application/x-www-form-urlencoded"))
+//            .setHeader(Exchange.HTTP_METHOD, constant("GET")) 
+//            .delay(10000)
+//            .toD("http://localhost:8089/servicesNS/admin/Splunk_ML_Toolkit/search/jobs/${header.sid}/results/?output_mode=json")
+//            .unmarshal(df)
+//            
+//            .process(new Processor() {
+//                public void process(Exchange exchange) throws Exception {
+//                    Root output = (Root)exchange.getIn().getBody(Root.class);
+//                    BillCycle predictdate = (BillCycle)exchange.getIn().getHeader("QueryResult");
+//                          
+//                    for (int i=0;i<output.getResults().size();i++) {
+//                   
+//                    	if(output.getResults().get(i).get_time().toString().equals(predictdate.getPredict_start_date().toString()))
+//                    	{
+//                    		log.info("result"+output.getResults().get(i).get_time().toString()+"prediction"+output.getResults().get(i).getPrediction()+"span"+output.getResults().get(i).get_spandays());
+//                            exchange.getIn().setHeader("_time",predictdate.getPredict_start_date());
+//                            exchange.getIn().setHeader("prediction",Double.parseDouble(output.getResults().get(i).getPrediction()));
+//                            if(output.getResults().get(i).get_spandays()!=null)
+//                            {
+//                                exchange.getIn().setHeader("future_span", Integer.parseInt(output.getResults().get(i).get_spandays()));
+//
+//	
+//                            }else exchange.getIn().setHeader("future_span", Integer.parseInt("0"));
+//
+//
+//                    		break;	
+//                    	}
+//                    	
+//                    	
+//                    
+//                    }
+//
+//                    exchange.getIn().setHeader("op_code",predictdate.getOperator_id());
+//
+//                    
+//               }
+//            })
+//            .to("sql:insert into predict_revenue (id,operator_id,from_date,to_date,future_span,predicted_amount,username) values " +
+//                    "(1,:#${header.op_code} , :#${header._time},sysdate, :#${header.future_span}, :#${header.prediction},'atiato')?" +
+//                    "dataSource=dataSource")
+//            
+//            .log("inserted time ${header._time}")
+//
+//            ;
+//
 
         //     A second route polls the DB for new orders and processes them
-            from("sql:select * from invoices where is_approved = 'no'?" +
-                "consumer.onConsume=update invoices set is_approved = 'yes' where id = :#id&" +
+            from("sql:select rowid ,CALL_DATE ,ADJUSTMENT_IND ,REVENUE_MONTH ,SUB_TYPE ,CALL_TYPE ,SERVICE_TYPE ,CALL_CLASS ,CNT ,DURATION ,DATA_VOLUME ,CHARGED_AMOUNT , PARTNUM ,DTM_DATE ,DTM_DAY_NO , IS_APPROVED  from FACT$IN_OPERATOR1$D where revenue_month='201908' and is_approved = 'no'?" +
+                "consumer.onConsume=update FACT$IN_OPERATOR1$D set is_approved = 'yes' where ROWID = :#oraclerowid&" +
                 "consumer.delay={{quickstart.processOrderPeriod:5s}}&" +
-                "dataSource=dataSource")
+                "dataSource=OracledataSource")//&"+"outputClass=io.fabric8.quickstarts.camel.RevenueMonth")
                 .routeId("generate-csv-for-indexing-in-splunk")
+               // .setHeader("rowid",simple("${body.rowid}"))
+                .process(new Processor() {
+                  public void process(Exchange exchange) throws Exception {
+                  	Map results = exchange.getIn().getBody(Map.class);
+                  	exchange.getIn().setHeader("oraclerowid", results.get("ROWID"));
+                  	exchange.getIn().setHeader("CALL_DATE", results.get("CALL_DATE"));
+                  	exchange.getIn().setHeader("ADJUSTMENT_IND", results.get("ADJUSTMENT_IND"));
+                  	exchange.getIn().setHeader("REVENUE_MONTH", results.get("REVENUE_MONTH"));
+                  	exchange.getIn().setHeader("SUB_TYPE", results.get("SUB_TYPE"));
+                  	exchange.getIn().setHeader("CALL_TYPE", results.get("CALL_TYPE"));
+                  	exchange.getIn().setHeader("SERVICE_TYPE", results.get("SERVICE_TYPE"));
+                  	exchange.getIn().setHeader("CALL_CLASS", results.get("CALL_CLASS"));
+                  	exchange.getIn().setHeader("CNT", results.get("CNT"));
+                  	exchange.getIn().setHeader("DURATION", results.get("DURATION"));
+                  	exchange.getIn().setHeader("DATA_VOLUME", results.get("DATA_VOLUME"));
+                  	exchange.getIn().setHeader("CHARGED_AMOUNT", results.get("CHARGED_AMOUNT"));
+                  	exchange.getIn().setHeader("PARTNUM", results.get("PARTNUM"));
+                  	exchange.getIn().setHeader("DTM_DAY_NO", results.get("DTM_DAY_NO"));
+//DTM_DATE
+                  	exchange.getIn().setHeader("DTM_DATE", results.get("DTM_DATE"));
+
+                      
+                 }
+              })       //     .to("log:DEBUG?showBody=true&showHeaders=true")
+
+              //  .setHeader("rowid",simple("${header.oraclerowid}"))
                 //.log("Processed order #id ${body.id}")
-                .marshal().csv() 
-                .to("file:target/reports/?fileName=report.txt&fileExist=Append");
+           //     .marshal().csv() 
+           //     .to("file:target/reports/?fileName=oracle.txt&fileExist=Append");
+                .to("sql:insert into factin_operator1d (CALL_DATE,ADJUSTMENT_IND,REVENUE_MONTH,SUB_TYPE,CALL_TYPE,SERVICE_TYPE,CALL_CLASS,CNT,DURATION ,DATA_VOLUME ,CHARGED_AMOUNT , PARTNUM ,DTM_DATE ,DTM_DAY_NO) values " +
+                     "(:#${header.CALL_DATE} , :#${header.ADJUSTMENT_IND},:#${header.REVENUE_MONTH}, :#${header.SUB_TYPE}, :#${header.CALL_TYPE},:#${header.SERVICE_TYPE},:#${header.CALL_CLASS},:#${header.CNT},:#${header.DURATION},:#${header.DATA_VOLUME},:#${header.CHARGED_AMOUNT},:#${header.PARTNUM},:#${header.DTM_DATE},:#${header.DTM_DAY_NO})?" +
+                     "dataSource=mySQLdataSource");
             
             
             
-            from("timer:new-order?delay=1s&period={{quickstart.generateOrderPeriod:2s}}")
-            .routeId("atiato-proocedure")
-            .to("sql-stored:tryitfromcamel(OUT DOUBLE span_out)")
-            .to("log:DEBUG?showBody=true&showHeaders=true")
-            .process(new Processor() {
-                public void process(Exchange exchange) throws Exception {
-                	Map results = exchange.getIn().getBody(Map.class);
-                	exchange.getIn().setHeader("span_out", results.get("span_out"));
-                    
-               }
-            })
-         //   .delay(10000)
-   
-            .log("Inserted out of proecedure order ${header.span_out}");
+//            from("timer:new-order?delay=1s&period={{quickstart.generateOrderPeriod:2s}}")
+//            .routeId("atiato-proocedure")
+//            .to("sql-stored:tryitfromcamel(OUT DOUBLE span_out)")
+//            .to("log:DEBUG?showBody=true&showHeaders=true")
+//            .process(new Processor() {
+//                public void process(Exchange exchange) throws Exception {
+//                	Map results = exchange.getIn().getBody(Map.class);
+//                	exchange.getIn().setHeader("span_out", results.get("span_out"));
+//                    
+//               }
+//            })
+//        
+//   
+//            .log("Inserted out of proecedure order ${header.span_out}");
 
         }
     }

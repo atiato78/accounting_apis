@@ -15,4 +15,19 @@
         </route>
     </camelContext>
     -->
-</beans>
+    <!--  <bean id="oracleDataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="oracle.jdbc.driver.OracleDriver"/>
+        <property name="url" value="jdbc:oracle:thin:@192.168.0.108:1521/orcl"/>
+        <property name="username" value="super_conf"/>
+        <property name="password" value="super_conf"/>
+    </bean> -->
+    
+    
+    
+   <!--   <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" 
+destroy-method="close"> 
+<property name="url" value="jdbc:mysql://localhost:3306/ra_systemdb?serverTimezone=EST5EDT" /> 
+<property name="driverClassName" value="com.mysql.jdbc.Driver" /> 
+<property name="username" value="root" /> 
+<property name="password" value="Oa03216287@" /></bean>  -->
+</beans> 
