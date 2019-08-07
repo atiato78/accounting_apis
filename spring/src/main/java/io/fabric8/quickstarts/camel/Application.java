@@ -264,13 +264,11 @@ public class Application extends SpringBootServletInitializer {
 //            ;
 //
 
-        //     A second route polls the DB for new orders and processes them
             from("sql:select rowid ,CALL_DATE ,ADJUSTMENT_IND ,REVENUE_MONTH ,SUB_TYPE ,CALL_TYPE ,SERVICE_TYPE ,CALL_CLASS ,CNT ,DURATION ,DATA_VOLUME ,CHARGED_AMOUNT , PARTNUM ,DTM_DATE ,DTM_DAY_NO , IS_APPROVED  from FACT$IN_OPERATOR1$D where revenue_month='201908' and is_approved = 'no'?" +
                 "consumer.onConsume=update FACT$IN_OPERATOR1$D set is_approved = 'yes' where ROWID = :#oraclerowid&" +
                 "consumer.delay={{quickstart.processOrderPeriod:5s}}&" +
                 "dataSource=OracledataSource")//&"+"outputClass=io.fabric8.quickstarts.camel.RevenueMonth")
                 .routeId("generate-csv-for-indexing-in-splunk")
-               // .setHeader("rowid",simple("${body.rowid}"))
                 .process(new Processor() {
                   public void process(Exchange exchange) throws Exception {
                   	Map results = exchange.getIn().getBody(Map.class);
@@ -289,21 +287,19 @@ public class Application extends SpringBootServletInitializer {
                   	exchange.getIn().setHeader("PARTNUM", results.get("PARTNUM"));
                   	exchange.getIn().setHeader("DTM_DAY_NO", results.get("DTM_DAY_NO"));
 //DTM_DATE
-                  	exchange.getIn().setHeader("DTM_DATE", results.get("DTM_DATE"));
-
-                      
+                  	exchange.getIn().setHeader("DTM_DATE", results.get("DTM_DATE"));                      
                  }
-              })       //     .to("log:DEBUG?showBody=true&showHeaders=true")
+              })      
+                .to("sql:insert into factin_operator1d (CALL_DATE,ADJUSTMENT_IND,REVENUE_MONTH,SUB_TYPE,CALL_TYPE,SERVICE_TYPE,CALL_CLASS,CNT,DURATION ,DATA_VOLUME ,CHARGED_AMOUNT , PARTNUM ,DTM_DATE ,DTM_DAY_NO) values " +
+                     "(:#${header.CALL_DATE} , :#${header.ADJUSTMENT_IND},:#${header.REVENUE_MONTH}, :#${header.SUB_TYPE}, :#${header.CALL_TYPE},:#${header.SERVICE_TYPE},:#${header.CALL_CLASS},:#${header.CNT},:#${header.DURATION},:#${header.DATA_VOLUME},:#${header.CHARGED_AMOUNT},:#${header.PARTNUM},:#${header.DTM_DATE},:#${header.DTM_DAY_NO})?" +
+                     "dataSource=mySQLdataSource");
+            
+             //     .to("log:DEBUG?showBody=true&showHeaders=true")
 
               //  .setHeader("rowid",simple("${header.oraclerowid}"))
                 //.log("Processed order #id ${body.id}")
            //     .marshal().csv() 
            //     .to("file:target/reports/?fileName=oracle.txt&fileExist=Append");
-                .to("sql:insert into factin_operator1d (CALL_DATE,ADJUSTMENT_IND,REVENUE_MONTH,SUB_TYPE,CALL_TYPE,SERVICE_TYPE,CALL_CLASS,CNT,DURATION ,DATA_VOLUME ,CHARGED_AMOUNT , PARTNUM ,DTM_DATE ,DTM_DAY_NO) values " +
-                     "(:#${header.CALL_DATE} , :#${header.ADJUSTMENT_IND},:#${header.REVENUE_MONTH}, :#${header.SUB_TYPE}, :#${header.CALL_TYPE},:#${header.SERVICE_TYPE},:#${header.CALL_CLASS},:#${header.CNT},:#${header.DURATION},:#${header.DATA_VOLUME},:#${header.CHARGED_AMOUNT},:#${header.PARTNUM},:#${header.DTM_DATE},:#${header.DTM_DAY_NO})?" +
-                     "dataSource=mySQLdataSource");
-            
-            
             
 //            from("timer:new-order?delay=1s&period={{quickstart.generateOrderPeriod:2s}}")
 //            .routeId("atiato-proocedure")
