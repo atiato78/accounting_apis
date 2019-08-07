@@ -43,14 +43,14 @@ mysql:
 test:
   # Spring JDBC configuration
   datasource:
-    url: jdbc:oracle:thin:@192.168.0.108:1521/orcl
+    url: jdbc:oracle:thin:@10.10.65.144:1521/orcl
     username: super_conf
     password: super_conf
     driverClassName: oracle.jdbc.driver.OracleDriver
     
 spring:
   datasource:
-    url:      jdbc:mysql://192.168.0.104:3306/ra_systemdb?serverTimezone=EST5EDT
+    url:      jdbc:mysql://10.10.65.203:3306/ra_systemdb?serverTimezone=EST5EDT
     username: root
     password: Oa03216287@
     driverClassName: com.mysql.jdbc.Driver
