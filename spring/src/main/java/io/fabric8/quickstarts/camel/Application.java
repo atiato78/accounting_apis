@@ -292,9 +292,9 @@ public class Application extends SpringBootServletInitializer {
               })      
                 .to("sql:insert into factin_operator1d (CALL_DATE,ADJUSTMENT_IND,REVENUE_MONTH,SUB_TYPE,CALL_TYPE,SERVICE_TYPE,CALL_CLASS,CNT,DURATION ,DATA_VOLUME ,CHARGED_AMOUNT , PARTNUM ,DTM_DATE ,DTM_DAY_NO) values " +
                      "(:#${header.CALL_DATE} , :#${header.ADJUSTMENT_IND},:#${header.REVENUE_MONTH}, :#${header.SUB_TYPE}, :#${header.CALL_TYPE},:#${header.SERVICE_TYPE},:#${header.CALL_CLASS},:#${header.CNT},:#${header.DURATION},:#${header.DATA_VOLUME},:#${header.CHARGED_AMOUNT},:#${header.PARTNUM},:#${header.DTM_DATE},:#${header.DTM_DAY_NO})?" +
-                     "dataSource=mySQLdataSource");
+                     "dataSource=mySQLdataSource")
             
-             //     .to("log:DEBUG?showBody=true&showHeaders=true")
+                 .to("log:DEBUG?showBody=true&showHeaders=true");
 
               //  .setHeader("rowid",simple("${header.oraclerowid}"))
                 //.log("Processed order #id ${body.id}")
