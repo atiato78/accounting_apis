@@ -183,6 +183,7 @@ public class Application extends SpringBootServletInitializer {
                     ")?" +
                             "dataSource=dataSource")
 
+                    .setBody(simple("${header.CamelSqlGeneratedKeyRows}"))
                     .endRest()
                 .get("QueryOpConfig/{op_code}/").description("Query The operator config for specified operator")
                     .route().routeId("operator-config-rate-api-opcode")
