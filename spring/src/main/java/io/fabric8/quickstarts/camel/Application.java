@@ -92,6 +92,12 @@ public class Application extends SpringBootServletInitializer {
                         "dataSource=dataSource&" +
                         "outputClass=io.fabric8.quickstarts.camel.Currency")
                     .endRest()
+                .get("sumrevenu").description("The sum revenu for specified currency")
+                    .route().routeId("get-revenue-month")
+                    .to("sql:SELECT SERVICE_TYPE, CALL_DATE, REVENUE_MONTH, CALL_CLASS, sum(CHARGED_AMOUNT) as CHARGED_AMOUNT FROM factin_operator1d WHERE CALL_CLASS IN('INTERNATIONAL', 'LOCAL', 'ROAMING' )  group by CALL_CLASS,SERVICE_TYPE?" +
+                        "dataSource=dataSource&" +
+                        "outputClass=io.fabric8.quickstarts.camel.RevenueMonth")
+                    .endRest()
                 .post("exchangerate/insert/{currency}/{exchange_rate}/{from_date}/{to_date}/{description}").description("insert The exchange for specified currency")
                     .route().routeId("insert-exchange-rate-api")
                     .setHeader("CamelSqlRetrieveGeneratedKeys",simple("true", Boolean.class))

@@ -1,3 +1,6 @@
+/*SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES;
+Select * from ENG_DriveTraffic;*/
+
 /*drop table invoices;
 
 CREATE TABLE invoices (
