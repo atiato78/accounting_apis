@@ -35,57 +35,155 @@ import org.joda.time.DateTime;
 
 
 public class Opconfig {
-    private String op_code;
+    private String operator_code;
    
-    private double coe_ratio;
+    private double cmc_coe_ratio_local;
+    private double cmc_coe_ratio_roaming;
+    private String operator_name;
+    private int payment_type_id;
+    private double operator_tax;
+    private String username;
+    private String bank_code;
+    private String bank_name;
+    private String branch;
+    private String phone;
+    private String email;
+    private String account_number;
+    private Timestamp stopping_date;
+    private String note;
     private String currency;
-    private int op_pay_type;
-    private double op_tax;
-  
-    public String getOp_code() {
-        return op_code;
+
+
+    public String getNote() {
+        return note;
     }
 
-    public void setOp_code(String op_code) {
-        this.op_code = op_code;
+    public void setNote(String note) {
+        this.note = note;
     }
 
-   
-
-    public double getCoe_ratio() {
-        return coe_ratio;
-    }
-
-    public void setCoe_ratio(double coe_ratio) {
-        this.coe_ratio = coe_ratio;
-    }
-    
-    
-
-  
-    
     public String getCurrency() {
         return currency;
     }
 
     public void setCurrency(String currency) {
         this.currency = currency;
-    } 
-    
-    public int getOp_pay_type() {
-        return op_pay_type;
+    }
+    public Timestamp getStopping_date() {
+        return stopping_date;
     }
 
-    public void setOp_pay_type(int op_pay_type) {
-        this.op_pay_type = op_pay_type;
+    public void setStopping_date(Timestamp stopping_date) {
+        this.stopping_date = stopping_date;
+    }
+
+    public String getAccount_number() {
+        return account_number;
+    }
+
+    public void setAccount_number(String account_number) {
+        this.account_number = account_number;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    public String getBranch() {
+        return branch;
+    }
+
+    public void setBranch(String branch) {
+        this.branch = branch;
+    }
+
+    public String getBank_name() {
+        return bank_name;
+    }
+
+    public void setBank_name(String bank_name) {
+        this.bank_name = bank_name;
+    }
+
+    public String getBank_code() {
+        return bank_code;
+    }
+
+    public void setBank_code(String bank_code) {
+        this.bank_code = bank_code;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+  
+    public String getOperator_code() {
+        return operator_code;
+    }
+
+    public void setOperator_code(String operator_code) {
+        this.operator_code = operator_code;
+    }
+
+    public String getOperator_name() {
+        return operator_name;
+    }
+
+    public void setOperator_name(String operator_name) {
+        this.operator_name = operator_name;
+    }
+
+   
+
+    public double getCmc_coe_ratio_local() {
+        return cmc_coe_ratio_local;
+    }
+
+    public void setCmc_coe_ratio_local(double cmc_coe_ratio_local) {
+        this.cmc_coe_ratio_local = cmc_coe_ratio_local;
+    }
+    
+    public double getCmc_coe_ratio_roaming() {
+        return cmc_coe_ratio_roaming;
+    }
+
+    public void setCmc_coe_ratio_roaming(double cmc_coe_ratio_roaming) {
+        this.cmc_coe_ratio_roaming = cmc_coe_ratio_roaming;
+    }
+    
+
+  
+    
+    
+    
+    public int getPayment_type_id() {
+        return payment_type_id;
+    }
+
+    public void setPayment_type_id(int payment_type_id) {
+        this.payment_type_id = payment_type_id;
     }
     
    
-    public double getOp_tax() {
-        return op_tax;
+    public double getOperator_tax() {
+        return operator_tax;
     }
 
-    public void setOp_tax(double op_tax) {
-        this.op_tax = op_tax;
+    public void setOperator_tax(double operator_tax) {
+        this.operator_tax = operator_tax;
     }
 }

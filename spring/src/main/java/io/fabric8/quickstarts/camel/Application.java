@@ -140,13 +140,49 @@ public class Application extends SpringBootServletInitializer {
                             "outputClass=io.fabric8.quickstarts.camel.Payment")
                     .endRest()
                     
-                .get("op-configuration/{op_code}/{currency}/{coe_ratio}/{op_tax}/{op_pay_type}").description("Query The payment for specified operator")
+                .post("op-configuration").description("Query The payment for specified operator")
                     .route().routeId("operator-configuration-insertion--api-opcode")
-                    .to("sql:insert into op_config (op_code,Currency,coe_ratio,op_tax,op_pay_type) values " +
-                            "(:#${header.op_code} , :#${header.currency},:#${header.coe_ratio},:#${header.op_tax}, :#${header.op_pay_type})?" +
+                    .setHeader("CamelSqlRetrieveGeneratedKeys",simple("true", Boolean.class))
+                   .marshal().json(JsonLibrary.Jackson,Opconfig.class)
+                    .unmarshal().json(JsonLibrary.Jackson,Opconfig.class)
+                    .setHeader("ops",simple("${body}"))
+
+                    .to("sql:INSERT INTO op_config ( operator_code, operator_name, phone, email, cmc_coe_ratio_local, "
+                    + "cmc_coe_ratio_roaming, operator_tax, payment_type_id, username, note) "
+                    +"values(:#${body.getOperator_code},:#${body.getOperator_name},:#${body.getPhone},:#${body.getEmail},:#${body.getCmc_coe_ratio_local},:#${body.getCmc_coe_ratio_roaming},:#${body.getOperator_tax}"+
+                    ",:#${body.getPayment_type_id},:#${body.getUsername},:#${body.getNote})?" +
                             "dataSource=dataSource")
-                    .log("genkey"+"${headers}")
-                    .setBody(constant("success"))
+                   .setBody(simple("${header.ops}"))
+                   .setHeader("op_id",simple("${header.CamelSqlGeneratedKeyRows}"))
+                   .process(new Processor() {
+                                   public void process(Exchange exchange) throws Exception {
+                                    ArrayList results = exchange.getIn().getHeader("op_id",ArrayList.class);
+                                    Map test = (Map)results.get(0);
+                                   	exchange.getIn().setHeader("op_id_decode", test.get("GENERATED_KEY"));
+                                       
+                                  }
+                               })
+                   .log("ya salam"+"${header.op_id_decode}")
+                    .to("sql:INSERT INTO bank_details ( bank_code, bank_name, branch, phone, email, username)"                   
+                    +"values(:#${body.getBank_code},:#${body.getBank_name},:#${body.getBranch},:#${body.getPhone},:#${body.getEmail},:#${body.getUsername}"+
+                    ")?" +
+                            "dataSource=dataSource")
+                    .setHeader("bank_id",simple("${header.CamelSqlGeneratedKeyRows}"))
+                    .setBody(simple("${header.ops}"))
+                    .process(new Processor() {
+                        public void process(Exchange exchange) throws Exception {
+                            ArrayList results = exchange.getIn().getHeader("bank_id",ArrayList.class);
+                            Map test = (Map)results.get(0);
+                               exchange.getIn().setHeader("bank_id_decode", test.get("GENERATED_KEY"));
+                            
+                       }
+                    })
+
+                    .to("sql:insert into operator_banking_accounts (operator_id, bank_id, account_number,currency, username)"                   
+                    +"values(:#${header.op_id_decode},:#${header.bank_id_decode},:#${body.getAccount_number},:#${body.getCurrency},:#${body.getUsername}"+
+                    ")?" +
+                            "dataSource=dataSource")
+
                     .endRest()
                 .get("QueryOpConfig/{op_code}/").description("Query The operator config for specified operator")
                     .route().routeId("operator-config-rate-api-opcode")
