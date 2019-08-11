@@ -24,6 +24,8 @@ spring:
     url:      jdbc:mysql://172.20.10.3:3306/ra_systemdb?serverTimezone=EST5EDT
     username: root
     password: Oa03216287@
+    defaultAutoCommit: true
+
     
 #    spring:
   # Spring JDBC configuration

@@ -15,6 +15,7 @@
  */
 package io.fabric8.quickstarts.camel;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -26,8 +27,11 @@ import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jackson.JacksonDataFormat;
 import org.apache.camel.component.servlet.CamelHttpTransportServlet;
+import org.apache.camel.impl.SimpleRegistry;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.model.rest.RestBindingMode;
+import org.apache.camel.spi.Registry;
+import org.apache.camel.spring.spi.SpringTransactionPolicy;
 import org.apache.camel.util.jsse.KeyManagersParameters;
 import org.apache.camel.util.jsse.KeyStoreParameters;
 import org.apache.camel.util.jsse.SSLContextParameters;
@@ -42,7 +46,12 @@ import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -74,7 +83,9 @@ public class Application extends SpringBootServletInitializer {
 
         @Override
         public void configure() {
-        	
+
+            
+
         	
             restConfiguration()
                 .contextPath("/camel-rest-sql").apiContextPath("/api-doc")
@@ -142,48 +153,8 @@ public class Application extends SpringBootServletInitializer {
                     
                 .post("op-configuration").description("Query The payment for specified operator")
                     .route().routeId("operator-configuration-insertion--api-opcode")
-                    .setHeader("CamelSqlRetrieveGeneratedKeys",simple("true", Boolean.class))
-                   .marshal().json(JsonLibrary.Jackson,Opconfig.class)
-                    .unmarshal().json(JsonLibrary.Jackson,Opconfig.class)
-                    .setHeader("ops",simple("${body}"))
-
-                    .to("sql:INSERT INTO op_config ( operator_code, operator_name, phone, email, cmc_coe_ratio_local, "
-                    + "cmc_coe_ratio_roaming, operator_tax, payment_type_id, username, note) "
-                    +"values(:#${body.getOperator_code},:#${body.getOperator_name},:#${body.getPhone},:#${body.getEmail},:#${body.getCmc_coe_ratio_local},:#${body.getCmc_coe_ratio_roaming},:#${body.getOperator_tax}"+
-                    ",:#${body.getPayment_type_id},:#${body.getUsername},:#${body.getNote})?" +
-                            "dataSource=dataSource")
-                   .setBody(simple("${header.ops}"))
-                   .setHeader("op_id",simple("${header.CamelSqlGeneratedKeyRows}"))
-                   .process(new Processor() {
-                                   public void process(Exchange exchange) throws Exception {
-                                    ArrayList results = exchange.getIn().getHeader("op_id",ArrayList.class);
-                                    Map test = (Map)results.get(0);
-                                   	exchange.getIn().setHeader("op_id_decode", test.get("GENERATED_KEY"));
-                                       
-                                  }
-                               })
-                   .log("ya salam"+"${header.op_id_decode}")
-                    .to("sql:INSERT INTO bank_details ( bank_code, bank_name, branch, phone, email, username)"                   
-                    +"values(:#${body.getBank_code},:#${body.getBank_name},:#${body.getBranch},:#${body.getPhone},:#${body.getEmail},:#${body.getUsername}"+
-                    ")?" +
-                            "dataSource=dataSource")
-                    .setHeader("bank_id",simple("${header.CamelSqlGeneratedKeyRows}"))
-                    .setBody(simple("${header.ops}"))
-                    .process(new Processor() {
-                        public void process(Exchange exchange) throws Exception {
-                            ArrayList results = exchange.getIn().getHeader("bank_id",ArrayList.class);
-                            Map test = (Map)results.get(0);
-                               exchange.getIn().setHeader("bank_id_decode", test.get("GENERATED_KEY"));
-                            
-                       }
-                    })
-
-                    .to("sql:insert into operator_banking_accounts (operator_id, bank_id, account_number,currency, username)"                   
-                    +"values(:#${header.op_id_decode},:#${header.bank_id_decode},:#${body.getAccount_number},:#${body.getCurrency},:#${body.getUsername}"+
-                    ")?" +
-                            "dataSource=dataSource")
-
-                    .setBody(simple("${header.CamelSqlGeneratedKeyRows}"))
+                    .to("direct:start")
+                
                     .endRest()
                 .get("QueryOpConfig/{op_code}/").description("Query The operator config for specified operator")
                     .route().routeId("operator-config-rate-api-opcode")
@@ -191,6 +162,63 @@ public class Application extends SpringBootServletInitializer {
                             "dataSource=dataSource&" +
                             "outputClass=io.fabric8.quickstarts.camel.Opconfig")
                     .endRest();
+
+                    from("direct:start").routeId("rollback2")
+                    .transacted("PROPAGATION_REQUIRED")
+                    .setHeader("CamelSqlRetrieveGeneratedKeys",simple("true", Boolean.class))
+                      .doTry()
+                          .marshal().json(JsonLibrary.Jackson,Opconfig.class)
+                              .unmarshal().json(JsonLibrary.Jackson,Opconfig.class)
+                              .setHeader("ops",simple("${body}"))
+                              .to("sql:INSERT INTO op_config ( operator_code, operator_name, phone, email, cmc_coe_ratio_local, "
+                              + "cmc_coe_ratio_roaming, operator_tax, payment_type_id, username, note) "
+                              +"values(:#${body.getOperator_code},:#${body.getOperator_name},:#${body.getPhone},:#${body.getEmail},:#${body.getCmc_coe_ratio_local},:#${body.getCmc_coe_ratio_roaming},:#${body.getOperator_tax}"+
+                              ",:#${body.getPayment_type_id},:#${body.getUsername},:#${body.getNote})?" +
+                                      "dataSource=dataSource1")
+                          .setBody(simple("${header.ops}"))
+                          .setHeader("op_id",simple("${header.CamelSqlGeneratedKeyRows}"))
+                          .process(new Processor() {
+                                          public void process(Exchange exchange) throws Exception {
+                                              ArrayList results = exchange.getIn().getHeader("op_id",ArrayList.class);
+                                              Map test = (Map)results.get(0);
+                                              exchange.getIn().setHeader("op_id_decode", test.get("GENERATED_KEY"));
+                                              
+                                          }
+                                      })
+                          .log("ya salam"+"${header.op_id_decode}")
+                              .to("sql:INSERT INTO bank_details ( bank_code, bank_name, branch, phone, email, username)"                   
+                              +"values(:#${body.getBank_code},:#${body.getBank_name},:#${body.getBranch},:#${body.getPhone},:#${body.getEmail},:#${body.getUsername}"+
+                              ")?" +
+                                      "dataSource=dataSource1")
+                              .setHeader("bank_id",simple("${header.CamelSqlGeneratedKeyRows}"))
+                              .setBody(simple("${header.ops}"))
+                              .process(new Processor() {
+                                  public void process(Exchange exchange) throws Exception {
+                                      ArrayList results = exchange.getIn().getHeader("bank_id",ArrayList.class);
+                                      Map test = (Map)results.get(0);
+                                      exchange.getIn().setHeader("bank_id_decode", test.get("GENERATED_KEY"));
+                                      
+                              }
+                              })
+
+                              .to("sql:insert into operator_banking_accounts (operator_id, bank_id, account_number,currency, username)"                   
+                              +"values(:#${header.op_id_decode},:#${header.bank_id_decode},:#${body.getAccount_number},:#${body.getCurrency},:#${body.getUsername}"+
+                              ")?" +
+                                      "dataSource=dataSource1")
+
+                              .setBody(simple("${header.CamelSqlGeneratedKeyRows}"))
+                      .doCatch(Exception.class)
+                              .process(new Processor() {
+                                  @Override
+                                  public void process(Exchange exchange) throws Exception {
+                                      final Throwable ex = exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Throwable.class);
+                                    //  exchange.getIn().setBody("{Exception occured :"+ex.getMessage()+"}");
+                                      throw new Exception("{Exception occured :"+ex.getMessage()+"}");
+
+
+                                  }
+                              })
+                      .end();
                 
         }
     }	
@@ -210,9 +238,14 @@ public class Application extends SpringBootServletInitializer {
         return DataSourceBuilder.create().build();
     }
     
+   
+   
     @Bean(name = "dataSource")
     @ConfigurationProperties(prefix="spring.datasource")
-    public DataSource trydataSource() {
+    public DataSource dataSource2() {
+    
+       
+
         return DataSourceBuilder.create().build();
     }
    
