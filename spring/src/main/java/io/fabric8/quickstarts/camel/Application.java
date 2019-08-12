@@ -27,6 +27,7 @@ import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jackson.JacksonDataFormat;
 import org.apache.camel.component.servlet.CamelHttpTransportServlet;
+import org.apache.camel.http.common.HttpOperationFailedException;
 import org.apache.camel.impl.SimpleRegistry;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.model.rest.RestBindingMode;
@@ -57,6 +58,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 import io.fabric8.quickstarts.camel.pojo.Root;
+import io.fabric8.quickstarts.camel.pojo.UnAuthorize;
 
 import org.apache.camel.util.jsse.SSLContextParameters;
 import org.apache.commons.httpclient.protocol.Protocol;
@@ -84,7 +86,15 @@ public class Application extends SpringBootServletInitializer {
         @Override
         public void configure() {
 
-            
+            onException(HttpOperationFailedException.class).handled(true).process(new Processor() {
+                @Override
+                public void process(Exchange exchange) throws Exception {
+                  //  exchange.getIn().setBody("{Exception occured :"+ex.getMessage()+"}");
+                    UnAuthorize test=new UnAuthorize();
+                    test.setResult("You are UnAuthrized to access such API");
+                    exchange.getIn().setBody(test);
+                }
+            });
 
         	
             restConfiguration()
@@ -105,6 +115,7 @@ public class Application extends SpringBootServletInitializer {
                     .endRest()
                 .get("sumrevenu").description("The sum revenu for specified currency")
                     .route().routeId("get-revenue-month")
+                    .to("direct:Auth")
                     .to("sql:SELECT SERVICE_TYPE, CALL_DATE, REVENUE_MONTH, CALL_CLASS, sum(CHARGED_AMOUNT) as CHARGED_AMOUNT FROM factin_operator1d WHERE CALL_CLASS IN('INTERNATIONAL', 'LOCAL', 'ROAMING' )  group by CALL_CLASS,SERVICE_TYPE?" +
                         "dataSource=dataSource&" +
                         "outputClass=io.fabric8.quickstarts.camel.RevenueMonth")
@@ -153,8 +164,13 @@ public class Application extends SpringBootServletInitializer {
                     
                 .post("op-configuration").description("Query The payment for specified operator")
                     .route().routeId("operator-configuration-insertion--api-opcode")
-                    .to("direct:start")
-                
+                    .setHeader("json",simple("${body}"))
+                 .to("direct:Auth")
+                    // .choice()
+                    //    .when(simple("${body.getResult} != 'You are UnAuthrized to access such API'"))
+                     //  .log("${body.getResult}")
+                   .setBody(simple("${header.json}"))
+                    .to("direct:start")             
                     .endRest()
                 .get("QueryOpConfig/{op_code}/").description("Query The operator config for specified operator")
                     .route().routeId("operator-config-rate-api-opcode")
@@ -219,6 +235,23 @@ public class Application extends SpringBootServletInitializer {
                                   }
                               })
                       .end();
+
+                from("direct:Auth").routeId("Auth")
+                      .to("log:DEBUG?showBody=true&showHeaders=true")
+                      .setHeader(Exchange.HTTP_METHOD, constant("GET")) 
+                      .setHeader("Content-Type", constant("application/json"))
+                      .setHeader("Accept", constant("application/json"))
+                      .setHeader("CamelHttpUrl",constant("http://localhost:5000/api/user"))
+                      .setHeader("CamelServletContextPath",constant(""))
+                      .setHeader("host",constant("localhost"))
+                      .setHeader("proto",constant("http"))
+                      .setHeader("Host",constant("localhost"))
+                      .setBody(constant(""))
+  
+                      .to("http://localhost:5000/api/user"+"?bridgeEndpoint=true");
+                
+                    //   .log("atiato"+"${body}")
+                    //   .log("log:DEBUG?showBody=true&showHeaders=true");
                 
         }
     }	
