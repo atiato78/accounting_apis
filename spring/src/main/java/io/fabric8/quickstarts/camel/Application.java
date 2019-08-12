@@ -248,7 +248,7 @@ public class Application extends SpringBootServletInitializer {
                       .setHeader("Host",constant("localhost"))
                       .setBody(constant(""))
   
-                      .to("http://localhost:5000/api/user"+"?bridgeEndpoint=true");
+                      .to("http://default.authspringcamel.hgwdb8vlz9.eus.azds.io/api/user"+"?bridgeEndpoint=true");
                 
                     //   .log("atiato"+"${body}")
                     //   .log("log:DEBUG?showBody=true&showHeaders=true");
@@ -258,11 +258,11 @@ public class Application extends SpringBootServletInitializer {
 
     
     
-    @Bean(name = "OracledataSource")
-    @ConfigurationProperties(prefix="test.datasource")
-    public DataSource dataSource() {
-        return DataSourceBuilder.create().build();
-    }
+    // @Bean(name = "OracledataSource")
+    // @ConfigurationProperties(prefix="test.datasource")
+    // public DataSource dataSource() {
+    //     return DataSourceBuilder.create().build();
+    // }
     
     @Bean(name = "mySQLdataSource")
     @Primary
@@ -373,37 +373,37 @@ public class Application extends SpringBootServletInitializer {
 //            ;
 //
 
-            from("sql:select rowid ,CALL_DATE ,ADJUSTMENT_IND ,REVENUE_MONTH ,SUB_TYPE ,CALL_TYPE ,SERVICE_TYPE ,CALL_CLASS ,CNT ,DURATION ,DATA_VOLUME ,CHARGED_AMOUNT , PARTNUM ,DTM_DATE ,DTM_DAY_NO , IS_APPROVED  from FACT$IN_OPERATOR1$D where revenue_month='201908' and is_approved = 'no'?" +
-                "consumer.onConsume=update FACT$IN_OPERATOR1$D set is_approved = 'yes' where ROWID = :#oraclerowid&" +
-                "consumer.delay={{quickstart.processOrderPeriod:5s}}&" +
-                "dataSource=OracledataSource")//&"+"outputClass=io.fabric8.quickstarts.camel.RevenueMonth")
-                .routeId("generate-csv-for-indexing-in-splunk")
-                .process(new Processor() {
-                  public void process(Exchange exchange) throws Exception {
-                  	Map results = exchange.getIn().getBody(Map.class);
-                  	exchange.getIn().setHeader("oraclerowid", results.get("ROWID"));
-                  	exchange.getIn().setHeader("CALL_DATE", results.get("CALL_DATE"));
-                  	exchange.getIn().setHeader("ADJUSTMENT_IND", results.get("ADJUSTMENT_IND"));
-                  	exchange.getIn().setHeader("REVENUE_MONTH", results.get("REVENUE_MONTH"));
-                  	exchange.getIn().setHeader("SUB_TYPE", results.get("SUB_TYPE"));
-                  	exchange.getIn().setHeader("CALL_TYPE", results.get("CALL_TYPE"));
-                  	exchange.getIn().setHeader("SERVICE_TYPE", results.get("SERVICE_TYPE"));
-                  	exchange.getIn().setHeader("CALL_CLASS", results.get("CALL_CLASS"));
-                  	exchange.getIn().setHeader("CNT", results.get("CNT"));
-                  	exchange.getIn().setHeader("DURATION", results.get("DURATION"));
-                  	exchange.getIn().setHeader("DATA_VOLUME", results.get("DATA_VOLUME"));
-                  	exchange.getIn().setHeader("CHARGED_AMOUNT", results.get("CHARGED_AMOUNT"));
-                  	exchange.getIn().setHeader("PARTNUM", results.get("PARTNUM"));
-                  	exchange.getIn().setHeader("DTM_DAY_NO", results.get("DTM_DAY_NO"));
-//DTM_DATE
-                  	exchange.getIn().setHeader("DTM_DATE", results.get("DTM_DATE"));                      
-                 }
-              })      
-                .to("sql:insert into factin_operator1d (CALL_DATE,ADJUSTMENT_IND,REVENUE_MONTH,SUB_TYPE,CALL_TYPE,SERVICE_TYPE,CALL_CLASS,CNT,DURATION ,DATA_VOLUME ,CHARGED_AMOUNT , PARTNUM ,DTM_DATE ,DTM_DAY_NO) values " +
-                     "(:#${header.CALL_DATE} , :#${header.ADJUSTMENT_IND},:#${header.REVENUE_MONTH}, :#${header.SUB_TYPE}, :#${header.CALL_TYPE},:#${header.SERVICE_TYPE},:#${header.CALL_CLASS},:#${header.CNT},:#${header.DURATION},:#${header.DATA_VOLUME},:#${header.CHARGED_AMOUNT},:#${header.PARTNUM},:#${header.DTM_DATE},:#${header.DTM_DAY_NO})?" +
-                     "dataSource=mySQLdataSource")
+//             from("sql:select rowid ,CALL_DATE ,ADJUSTMENT_IND ,REVENUE_MONTH ,SUB_TYPE ,CALL_TYPE ,SERVICE_TYPE ,CALL_CLASS ,CNT ,DURATION ,DATA_VOLUME ,CHARGED_AMOUNT , PARTNUM ,DTM_DATE ,DTM_DAY_NO , IS_APPROVED  from FACT$IN_OPERATOR1$D where revenue_month='201908' and is_approved = 'no'?" +
+//                 "consumer.onConsume=update FACT$IN_OPERATOR1$D set is_approved = 'yes' where ROWID = :#oraclerowid&" +
+//                 "consumer.delay={{quickstart.processOrderPeriod:5s}}&" +
+//                 "dataSource=OracledataSource")//&"+"outputClass=io.fabric8.quickstarts.camel.RevenueMonth")
+//                 .routeId("generate-csv-for-indexing-in-splunk")
+//                 .process(new Processor() {
+//                   public void process(Exchange exchange) throws Exception {
+//                   	Map results = exchange.getIn().getBody(Map.class);
+//                   	exchange.getIn().setHeader("oraclerowid", results.get("ROWID"));
+//                   	exchange.getIn().setHeader("CALL_DATE", results.get("CALL_DATE"));
+//                   	exchange.getIn().setHeader("ADJUSTMENT_IND", results.get("ADJUSTMENT_IND"));
+//                   	exchange.getIn().setHeader("REVENUE_MONTH", results.get("REVENUE_MONTH"));
+//                   	exchange.getIn().setHeader("SUB_TYPE", results.get("SUB_TYPE"));
+//                   	exchange.getIn().setHeader("CALL_TYPE", results.get("CALL_TYPE"));
+//                   	exchange.getIn().setHeader("SERVICE_TYPE", results.get("SERVICE_TYPE"));
+//                   	exchange.getIn().setHeader("CALL_CLASS", results.get("CALL_CLASS"));
+//                   	exchange.getIn().setHeader("CNT", results.get("CNT"));
+//                   	exchange.getIn().setHeader("DURATION", results.get("DURATION"));
+//                   	exchange.getIn().setHeader("DATA_VOLUME", results.get("DATA_VOLUME"));
+//                   	exchange.getIn().setHeader("CHARGED_AMOUNT", results.get("CHARGED_AMOUNT"));
+//                   	exchange.getIn().setHeader("PARTNUM", results.get("PARTNUM"));
+//                   	exchange.getIn().setHeader("DTM_DAY_NO", results.get("DTM_DAY_NO"));
+// //DTM_DATE
+//                   	exchange.getIn().setHeader("DTM_DATE", results.get("DTM_DATE"));                      
+//                  }
+//               })      
+//                 .to("sql:insert into factin_operator1d (CALL_DATE,ADJUSTMENT_IND,REVENUE_MONTH,SUB_TYPE,CALL_TYPE,SERVICE_TYPE,CALL_CLASS,CNT,DURATION ,DATA_VOLUME ,CHARGED_AMOUNT , PARTNUM ,DTM_DATE ,DTM_DAY_NO) values " +
+//                      "(:#${header.CALL_DATE} , :#${header.ADJUSTMENT_IND},:#${header.REVENUE_MONTH}, :#${header.SUB_TYPE}, :#${header.CALL_TYPE},:#${header.SERVICE_TYPE},:#${header.CALL_CLASS},:#${header.CNT},:#${header.DURATION},:#${header.DATA_VOLUME},:#${header.CHARGED_AMOUNT},:#${header.PARTNUM},:#${header.DTM_DATE},:#${header.DTM_DAY_NO})?" +
+//                      "dataSource=mySQLdataSource")
             
-                 .to("log:DEBUG?showBody=true&showHeaders=true");
+//                  .to("log:DEBUG?showBody=true&showHeaders=true");
 
               //  .setHeader("rowid",simple("${header.oraclerowid}"))
                 //.log("Processed order #id ${body.id}")
