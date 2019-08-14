@@ -113,6 +113,8 @@
     <artifactId>camel-csv</artifactId>
 </dependency>
 
+ 
+
  <dependency> <groupId>oracle</groupId> <artifactId>ojdbc6</artifactId> <version>11.2.0.3</version> </dependency>
 	
 	<!-- https://mvnrepository.com/artifact/commons-dbcp/commons-dbcp -->
@@ -122,6 +124,8 @@
     <version>1.2.2</version>
 </dependency>
 	
+ 
+    
 
 <dependency>
     <groupId>org.apache.camel</groupId>

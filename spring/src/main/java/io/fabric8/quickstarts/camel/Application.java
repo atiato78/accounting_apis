@@ -16,9 +16,12 @@
 package io.fabric8.quickstarts.camel;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Map;
 
+import javax.activation.FileDataSource;
 import javax.sql.DataSource;
 
 import org.apache.camel.Exchange;
@@ -28,6 +31,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jackson.JacksonDataFormat;
 import org.apache.camel.component.servlet.CamelHttpTransportServlet;
 import org.apache.camel.http.common.HttpOperationFailedException;
+import org.apache.camel.impl.DefaultAttachment;
 import org.apache.camel.impl.SimpleRegistry;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.model.rest.RestBindingMode;
@@ -52,7 +56,9 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -98,6 +104,7 @@ public class Application extends SpringBootServletInitializer {
 
         	
             restConfiguration()
+         
                 .contextPath("/camel-rest-sql").apiContextPath("/api-doc")
                     .apiProperty("api.title", "Camel REST API")
                     .apiProperty("api.version", "1.0")
@@ -161,7 +168,39 @@ public class Application extends SpringBootServletInitializer {
                             "dataSource=dataSource&" +
                             "outputClass=io.fabric8.quickstarts.camel.Payment")
                     .endRest()
-                    
+        //         .post("sendemail").description("send file by email")
+        //             .route().routeId("send-file-by-email")
+        //             .setHeader("json",simple("${body}"))
+        //       //   .to("direct:Auth")
+        //             // .choice()
+        //             //    .when(simple("${body.getResult} != 'You are UnAuthrized to access such API'"))
+        //              //  .log("${body.getResult}")
+        //            .setBody(simple("${header.json}"))
+        //            .process(new Processor() {
+        //             public void process(Exchange exchange) throws Exception {
+                        
+                
+                        
+        //              DefaultAttachment att = new DefaultAttachment(new FileDataSource("/data/backup/omar.pdf"));
+     
+                        
+        //                 att.addHeader("Content-Description", "splunkattached");
+        //                 exchange.getIn().addAttachmentObject("omar.pdf", att);
+     
+                        
+                       
+        //            }
+        //         })
+        //         .setBody(constant(""))
+        //         .setHeader("subject", constant("Invoice to operator"))
+        //         .setHeader("To", constant("omar.atia@immovate.net;ahmad.muslimany@immovate.net"))
+        //   //      .setBody(simple("Diode status : ${header.Status}"))
+        //      //   .setHeader("Body",simple("Diode status : ${header.Status}"))
+        //         .log("Before sending email :  ${body}")
+        //         .to("smtps://smtp.gmail.com:465?password=Oa03216287@&username=atiaomar1978@gmail.com&From=acs@immovate.com")
+        //         .log("Inserted values ${body}")
+        //         .log("Inserted values ${body}")
+        //             .endRest()
                 .post("op-configuration").description("Query The payment for specified operator")
                     .route().routeId("operator-configuration-insertion--api-opcode")
                     .setHeader("json",simple("${body}"))
@@ -248,7 +287,7 @@ public class Application extends SpringBootServletInitializer {
                       .setHeader("Host",constant("localhost"))
                       .setBody(constant(""))
   
-                      .to("http://default.authspringcamel.hgwdb8vlz9.eus.azds.io/api/user"+"?bridgeEndpoint=true");
+                      .to("http://localhost:5000/api/user"+"?bridgeEndpoint=true");
                 
                     //   .log("atiato"+"${body}")
                     //   .log("log:DEBUG?showBody=true&showHeaders=true");
