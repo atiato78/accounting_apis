@@ -26,7 +26,7 @@
     
 <bean id="dataSource1" class="org.apache.commons.dbcp.BasicDataSource" 
 destroy-method="close"> 
-<property name="url" value="jdbc:mysql://localhost:3306/ra_systemdb?serverTimezone=EST5EDT" /> 
+<property name="url" value="jdbc:mysql://localhost:3306/ra_db?serverTimezone=EST5EDT" /> 
 <property name="driverClassName" value="com.mysql.jdbc.Driver" /> 
 <property name="username" value="root" /> 
 <property name="password" value="Oa03216287@" /></bean>  

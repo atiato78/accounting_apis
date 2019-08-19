@@ -15,12 +15,16 @@
  */
 package io.fabric8.quickstarts.camel;
 
+import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
+import javax.activation.DataHandler;
 import javax.activation.FileDataSource;
 import javax.sql.DataSource;
 
@@ -321,6 +325,19 @@ public class Application extends SpringBootServletInitializer {
         return DataSourceBuilder.create().build();
     }
    
+    public void process(Exchange exchange) throws Exception { // the API is a bit clunky so we need to loop 
+        Map<String, DataHandler> attachments = exchange.getIn().getAttachments(); 
+        if (attachments.size() > 0) { 
+        for (String name : attachments.keySet()) 
+            { DataHandler dh = attachments.get(name); 
+                // get the file name 
+                String filename = dh.getName(); // get the content and convert it to byte[] 
+                byte[] data = exchange.getContext().getTypeConverter() .convertTo(byte[].class, dh.getInputStream()); // write the data to a file 
+                FileOutputStream out = new FileOutputStream(filename); 
+                out.write(data); out.flush(); out.close(); 
+            } 
+        }
+     }
     
     @Component
     class Backend extends RouteBuilder {
@@ -464,6 +481,79 @@ public class Application extends SpringBootServletInitializer {
 //   
 //            .log("Inserted out of proecedure order ${header.span_out}");
 
+
+
+  //  from("file:target/reports/?delete=true")
+  from("imaps://imap.gmail.com?username=atiaomarj@gmail.com&password=Oa03001294@" + "&delete=false&unseen=true&consumer.delay=60000")
+  .process(new Processor() { // the API is a bit clunky so we need to loop 
+                    public void process(Exchange exchange) throws Exception {
+
+    Map<String, DataHandler> attachments = exchange.getIn().getAttachments(); 
+    if (attachments.size() > 0) { 
+    for (String name : attachments.keySet()) 
+        { DataHandler dh = attachments.get(name); 
+            // get the file name 
+            String filename = dh.getName(); // get the content and convert it to byte[] 
+            byte[] data = exchange.getContext().getTypeConverter() .convertTo(byte[].class, dh.getInputStream()); // write the data to a file 
+            InputStream out = new ByteArrayInputStream(data); 
+         exchange.getIn().setBody(out);
+        } 
+    }
+ }
+})
+//.convertBodyTo(ArrayList.class)
+
+    .to("log:newmail")
+
+    .unmarshal().csv()
+    .process(new Processor() {
+                       public void process(Exchange exchange) throws Exception {
+                        List<List<String>> results = (List<List<String>>) exchange.getIn().getBody();
+                        for (List<String> line : results) {
+                            exchange.getIn().setHeader("operator_id", line.get(0));
+                            exchange.getIn().setHeader("invoice_record", line.get(1));
+                            exchange.getIn().setHeader("invoice_number_ref", line.get(2));
+                            exchange.getIn().setHeader("currency", line.get(3));
+                            exchange.getIn().setHeader("payment_amount", line.get(4));
+                            exchange.getIn().setHeader("status", line.get(5));
+                            exchange.getIn().setHeader("payment_type_id", line.get(6));
+                            exchange.getIn().setHeader("payment_date", line.get(7));
+                            exchange.getIn().setHeader("log_date", line.get(8));
+                            exchange.getIn().setHeader("username", line.get(9));
+                        }
+                          
+
+                           
+                      }
+                   })
+    .to("sql:insert into payment (operator_id,invoice_record,invoice_number_ref,currency,payment_amount,status,payment_type_id,payment_date,log_date,username) values " +
+                   "(:#${header.operator_id} , :#${header.invoice_record},:#${header.invoice_number_ref},:#${header.currency},:#${header.payment_amount},:#${header.status}, :#${header.payment_type_id},:#${header.payment_date},:#${header.log_date},:#${header.username})?" +
+                   "dataSource=dataSource")
+    .to("sql:select sum(a.payment_amount) TOTAL_PAY, a.invoice_number_ref PAY_REF,a.payment_amount PAY_AMOUNT,b.invoice_number_ref PAY_REF_INV, b.final_invoice_amount PAY_AMOUNT_INV from invoices b , payment a where a.invoice_number_ref = b.invoice_number_ref and a.invoice_number_ref = :#${header.invoice_number_ref} group by a.invoice_number_ref?dataSource=dataSource")
+    .process(new Processor() {
+                          public void process(Exchange exchange) throws Exception {
+                              ArrayList results = exchange.getIn().getBody(ArrayList.class);
+                              Map out=(Map) results.get(0);
+                              exchange.getIn().setHeader("TOTAL_PAY", out.get("TOTAL_PAY"));
+
+                          	exchange.getIn().setHeader("PAY_REF", out.get("PAY_REF"));
+                          	exchange.getIn().setHeader("PAY_AMOUNT", out.get("PAY_AMOUNT"));
+                          	exchange.getIn().setHeader("PAY_REF_INV", out.get("PAY_REF_INV"));
+                          	exchange.getIn().setHeader("PAY_AMOUNT_INV", out.get("PAY_AMOUNT_INV"));
+                                
+                         }
+                      })
+    .choice()
+    .when(simple("${header.TOTAL_PAY} == ${header.PAY_AMOUNT_INV}")) 
+    .log("amount is fully paid")
+    .to("sql:update invoices set status='FullyPaid' where invoice_number_ref = :#${header.invoice_number_ref}?dataSource=dataSource")
+    .when(simple("${header.TOTAL_PAY} < ${header.PAY_AMOUNT_INV}")) 
+    .to("sql:update invoices set status='PartiallyPaid' where invoice_number_ref = :#${header.invoice_number_ref}?dataSource=dataSource")
+    .log("amount is partially paid")
+    .end()
+    .to("log:DEBUG?showBody=true&showHeaders=true");
+
+     
         }
     }
 }

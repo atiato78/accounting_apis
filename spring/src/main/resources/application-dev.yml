@@ -21,7 +21,7 @@ endpoints:
 spring:
   # Spring JDBC configuration
   datasource:
-    url:      jdbc:mysql://localhost:3306/ra_systemdb?serverTimezone=EST5EDT
+    url:      jdbc:mysql://localhost:3306/ra_db?serverTimezone=EST5EDT
     username: root
     password: Oa03216287@
     defaultAutoCommit: true
