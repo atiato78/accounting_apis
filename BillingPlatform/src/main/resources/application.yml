@@ -29,9 +29,9 @@ mysql:
 spring:
   # Spring JDBC configuration
   datasource:
-    url:      jdbc:mysql://localhost:3306/ra_db?serverTimezone=EST5EDT
+    url:      jdbc:mysql://10.10.65.202:3306/ra_payments?serverTimezone=EST5EDT
     username: root
-    password: Oa03216287@
+    password: 
     driverClassName : com.mysql.jdbc.Driver
 
 #spring:

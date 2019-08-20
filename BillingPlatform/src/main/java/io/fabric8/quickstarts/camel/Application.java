@@ -546,9 +546,9 @@ public class Application extends SpringBootServletInitializer {
     .choice()
     .when(simple("${header.TOTAL_PAY} == ${header.PAY_AMOUNT_INV}")) 
     .log("amount is fully paid")
-    .to("sql:update invoices set status='FullyPaid' where invoice_number_ref = :#${header.invoice_number_ref}?dataSource=dataSource")
+    .to("sql:update invoices set status='fullypaid' where invoice_number_ref = :#${header.invoice_number_ref}?dataSource=dataSource")
     .when(simple("${header.TOTAL_PAY} < ${header.PAY_AMOUNT_INV}")) 
-    .to("sql:update invoices set status='PartiallyPaid' where invoice_number_ref = :#${header.invoice_number_ref}?dataSource=dataSource")
+    .to("sql:update invoices set status='partiallypaid' where invoice_number_ref = :#${header.invoice_number_ref}?dataSource=dataSource")
     .log("amount is partially paid")
     .end()
     .to("log:DEBUG?showBody=true&showHeaders=true");
