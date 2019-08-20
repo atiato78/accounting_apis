@@ -493,7 +493,7 @@ public class Application extends SpringBootServletInitializer {
     for (String name : attachments.keySet()) 
         { DataHandler dh = attachments.get(name); 
             // get the file name 
-            String filename = dh.getName(); // get the content and convert it to byte[] 
+             // get the content and convert it to byte[] 
             byte[] data = exchange.getContext().getTypeConverter() .convertTo(byte[].class, dh.getInputStream()); // write the data to a file 
             InputStream out = new ByteArrayInputStream(data); 
          exchange.getIn().setBody(out);

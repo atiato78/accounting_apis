@@ -1,8 +1,0 @@
-sid,search,"splunk_server","_time","is_realtime",provenance,"event_count","exec_time","result_count","scan_count",status,"total_run_time","api_et","api_lt","search_et","search_lt","__mv_sid","__mv_search","__mv_splunk_server","__mv__time","__mv_is_realtime","__mv_provenance","__mv_event_count","__mv_exec_time","__mv_result_count","__mv_scan_count","__mv_status","__mv_total_run_time","__mv_api_et","__mv_api_lt","__mv_search_et","__mv_search_lt"
-"1562442804.8","search source=""/opt/splunk/etc/target/reports/report.txt"" host=""f46a6fe235b2"" index=""invoices"" sourcetype=""csv""",f46a6fe235b2,"1562442804.580464",0,"UI:Search",21,1562442805,21,21,completed,"0.388",,,,,,,,,,,,,,,,,,,,
-"rt_md_1562747286.6","| metadata type=sourcetypes | search totalCount > 0",f46a6fe235b2,"1562747286.373656",1,"UI:Search",0,1562747287,0,0,canceled,"7.09",,,,,,,,,,,,,,,,,,,,
-"1562747293.10","search index=invoices",f46a6fe235b2,"1562747293.478326",0,"UI:Search",0,1562747293,0,0,completed,"0.161","1562659200.000000000","1562747293.000000000","1562659200.000000000","1562747293.000000000",,,,,,,,,,,,,,,,
-"1562747297.11","search index=invoices",f46a6fe235b2,"1562747297.403739",0,"UI:Search",22,1562747297,22,22,completed,"0.128",,,,,,,,,,,,,,,,,,,,
-"1562747328.12","search index=invoices to_date=""2019-08-31""",f46a6fe235b2,"1562747328.747757",0,"UI:Search",2,1562747328,2,2,completed,"0.096",,,,,,,,,,,,,,,,,,,,
-"1562747444.13","search index=invoices | delete",f46a6fe235b2,"1562747444.924410",0,"UI:Search",0,1562747445,0,0,failed,"0.002",,,,,,,,,,,,,,,,,,,,
-"1562747449.14","search index=invoices",f46a6fe235b2,"1562747449.812463",0,"UI:Search",22,1562747450,22,22,completed,"0.334",,,,,,,,,,,,,,,,,,,,
