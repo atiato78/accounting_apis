@@ -1,5 +1,5 @@
 FROM mcr.microsoft.com/java/jre:8u202-zulu-debian9 AS base
-EXPOSE 8080
+EXPOSE 7547
 WORKDIR /app
 
 FROM mcr.microsoft.com/java/maven:8u202-zulu-debian9 AS build

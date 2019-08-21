@@ -292,6 +292,9 @@ public class Application extends SpringBootServletInitializer {
                       .setBody(constant(""))
   
                       .to("http://localhost:5000/api/user"+"?bridgeEndpoint=true");
+
+
+                     
                 
                     //   .log("atiato"+"${body}")
                     //   .log("log:DEBUG?showBody=true&showHeaders=true");
